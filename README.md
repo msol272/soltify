@@ -38,6 +38,16 @@ to your "Liked Songs" list and creates a similarity score. If the release is abo
 threshold, it gets added to your queue. There are separate album queues, EP queues, and single
 queues, and each will remain sorted by similarity score.
 
+## Soltify Memories (coming soon)
+
+Requested by Phil "The Thrill" Frandina.
+
+Sometimes you listen to a song a few times and like it, but then you forget about it. This tool tries
+to find those songs are remind you. It creates a playlist that specifically excludes anything you've listened
+to very recently, but tries to find songs that you listened to multiple times in the past or "Liked" in the
+past.  Optionally, it can add songs from related artists who you haven't heard to give it a Discover Weekly
+kind of vibe.
+
 ## Soltify Playlist Builder (coming soon)
 
 Create a playlist that contains a subset of songs from your liked songs.  Options include:
