@@ -25,8 +25,8 @@ def main():
            " by the same artist.")
 
     cache_group = parser.add_argument_group("local cache options")
-    cache_group.add_argument("--cachedir", type=str, default="./soltify_cache", 
-      help="Directory to save/load cached playlists from (default=./soltify_cache)")
+    cache_group.add_argument("--cachedir", type=str, default="soltify_cache", 
+      help="Directory to save/load cached playlists from (default=soltify_cache)")
     cache_group.add_argument("--uselocal", action="store_true", 
       help="Load the playlist from the local cache instead of reloading it from" \
            " Spotify. This will run much faster, but will not pick up any changes" \
@@ -35,11 +35,12 @@ def main():
     args = parser.parse_args()
 
     # Open connection to spotify
-    spot = spotify.Spotify()
-    spot.connect()
+    sp = spotify.Spotify()
+    sp.connect()
 
     # Load songs from the playlist
     if args.uselocal:
+        print("Loading playlist from cache...")
         # Try to load from a local cache file
         try:
             songs, playlist_uri = file_manager.load_playlist(args.cachedir, args.playlist)
@@ -47,9 +48,10 @@ def main():
             log.error(err)
             return
     else:  # not args.uselocal
+        print("Loading playlist from Spotify...")
         # Try to load from spotify
         try:
-            songs, playlist_uri = spot.load_playlist(args.playlist)
+            songs, playlist_uri = sp.load_playlist(args.playlist)
         except RuntimeError as err:
             log.error(err)
             return
@@ -58,10 +60,14 @@ def main():
         file_manager.save_playlist(args.cachedir, args.playlist, songs, playlist_uri)
 
     # Shuffle the songs
+    print("Shuffling {} songs...".format(len(songs)))
     songs = shuffle.shuffle(songs, args.ignoreartist)
 
     # Update the playlist to be in the new shuffled order
-    spot.write_playlist(playlist_uri, songs, overwrite=True)
+    print("Updating playlist in Spotify...")
+    sp.write_playlist(playlist_uri, songs, overwrite=True)
+
+    print("Done!")
 
 if __name__ == "__main__":
     main()
