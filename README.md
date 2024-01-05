@@ -1,13 +1,31 @@
 # Soltify Suite
 My suite of tools for Spotify that help create playlists, build music brackets, and more!
 
-## Soltify Shuffle (coming soon)
+## Soltify Shuffle
 
 Spotify's built-in shuffle sucks. It always plays the same songs and clumps artists together.
 
 Soltify Shuffle re-arranges a playlist to be truly shuffled. It also has the option to spread
 artists out so that if you have 10 songs from one artist in a 100 song playlist, you will only
 hear them once every 10 songs or so.
+
+### Examples:
+
+* Example 1: Shuffle playlist "My Songs" with artists evenly spaced
+
+`python soltify_shuffle.py "My Songs"`
+
+* Example 2: Repeat Example 1 without fetching playlist from Spotify a 2nd time (to speed it up)
+
+`python soltify_shuffle.py "My Songs" --uselocal`
+
+* Example 3: Shuffle playlist "My Songs" completely randomly, without spacing out artists
+
+`python soltify_shuffle.py "My Songs" --ignoreartist`
+
+* For more detailed usage, run:
+
+`python soltify_shuffle.py -h`
 
 ## Soltify Radar (coming soon)
 
