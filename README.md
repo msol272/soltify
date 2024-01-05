@@ -73,3 +73,69 @@ in the same year.
 ## Soltify History (coming soon)
 
 Build a cumulative history of your Spotify music listening history by combining exports from Spotify.
+
+# How To Run
+
+## Spotify Setup
+
+1. Login to https://developer.spotify.com/dashboard/ with your Spotify username and password
+    - You *might* have to make a special developers account? I don't remember
+
+2. Register an app
+    - Click "Create app"
+    - Enter an App Name (it can be "Soltify" or whatever you want)
+    - Enter the following under Redirect URI: https://localhost:8888/callback
+    - Check "I understand and agree..." and click Save
+
+3. Get your Client ID and Client Secret
+    - Click on your newly created app
+    - Click Settings
+    - Click "View client secret"
+    - It should now show a Client ID and Client Secret
+
+4. Set environment variables
+    - Windows
+        - Type "Edit the system environment variables" in search bar to bring up settings
+        - Click "Environment Variables"
+        - In the "System variables" panel (the bottom one), click "New..." 3 times to add 3 variables:
+            - SPOTIPY_REDIRECT_URI = https://localhost:8888/callback
+            - SPOTIPY_CLIENT_ID = (paste your client ID from Spotify)
+            - SPOTIPY_CLIENT_SECRET = (paste your client secret from Spotify)
+        - Make sure to click OK on every window to save
+        - If you have Command Prompt open, close it to let the settings take effect
+    - Mac
+        - Open terminal and type `ls -a` to list all files
+        - Depending on your version of Mac, you will have a file called .profile, .bash_profile, or
+            .zprofile
+        - Open that file in a text editor by typing `open -e [filename]`
+        - Add the following lines to the end of it:
+            ```
+            export SPOTIPY_REDIRECT_URI=https://localhost:8888/callback
+            export SPOTIPY_CLIENT_ID=(paste your client ID from Spotify)
+            export SPOTIPY_CLIENT_SECRET=(paste your client secret from Spotify)
+            ```
+        - Save file and close terminal for settings to take effect
+
+## Installation
+
+1. Download and install python: https://www.python.org/downloads/
+2. Download and unzip Soltify:
+    - Go to https://github.com/msol272/soltify
+    - Click Code -> Download ZIP
+    - Unzip the files
+3. Install the spotipy library
+    - Open Terminal (on Mac) or Command Prompt (on Windows)
+    - Type `pip install spotipy`
+
+## Running the tools
+
+1. If you're on Mac, open Finder and click "View -> Path Bar"
+2. Navigate to the `soltify-main` folder that contains files like README.md, etc and copy the path from the path bar
+3. Open Terminal (on Mac) or Command Prompt (on Windows) and navigate to that path by typing `cd <path>`
+    - Example: `cd C:\Users\msolt\Downloads\soltify-main\soltify-main`
+4. Run a tool by typing a command as described in README.md:
+    - Example `python soltify_shuffle.py "My Playlist"`
+
+NOTE: The first time you run one of the tools, it will open a webpage in your browser and maybe ask you to login to Spotify.
+Then, it will bring you to a blank webpage and you will need to copy/paste the URL from your web browser to Terminal/Command Prompt.
+After that works once, it should never happen again.
