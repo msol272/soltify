@@ -30,13 +30,112 @@ hear them once every 10 songs or so.
 ## Soltify Radar (coming soon)
 
 Spotify's built-in release radar sucks. It feeds you tons of covers, live tracks, and re-recordings
-that you don't care about, and it always favors certain artists. Plus, sometimes if you don't check
-it for a few weeks, you permanently miss a release.
+that you don't care about, and it always favors certain artists. It's hard to tell what is a single
+and what's a full album. Plus, sometimes if you don't check it for a few weeks, you permanently miss
+a release.
 
-Soltify Radar grabs a list of music releases from the internet each week. It then compares these
-to your "Liked Songs" list and creates a similarity score. If the release is above a certain
-threshold, it gets added to your queue. There are separate album queues, EP queues, and single
-queues, and each will remain sorted by similarity score.
+Soltify Radar creates and maintains a running list of Albums and Singles for you to check out. It is based on
+similarity to your Liked Songs, as well as critic reviews of albums.  It tries to filter out stuff you don't
+want like covers, live tracks, etc and differentiates singles from albums.
+
+For more details, read on...
+
+### Getting recommendations from Spotify
+
+Soltify Radar maintains a list of all artists you've liked songs from, as well as their related artists (1st order)
+and related artists of their related artist (2nd order). It assigns taste points to each artist as follows:
+
+* Each song you've liked by the artist: +10 points (`--taste-pts0`)
+* Each song you've liked by a 1st order relative: +5 points (`taste-pts1`)
+* Each song you've liked by a 2nd order relative: +2 points (`--taste-pts2`)
+
+For all artists with a taste score of 10 (`--taste-thresh`) or higher, Spotify is scanned for any releases since
+last time Soltify Radar was run, or up to 60 (`--max-days`) back.
+
+### Getting critic scores
+
+For each selected album, we try to get a critic score from AlbumOfTheYear.org. If the album has at least 5 critic
+reviews there, its score is extracted.
+
+### Filtering
+
+By default, Soltify Radar tries to detect and filter out certain types of albums/songs unless the override is given:
+
+* Remasters (`--allow-remaster`)
+* Live (`--allow-live`)
+* Acoustic Versions (`--allow-acoustic`)
+* Remixes (`--allow-remix`)
+* Covers (`--allow-cover`)
+
+Since this is not fool proof, you will be prompted about whether or not you want to keep these releases (unless you
+specify `--force-filter`)
+
+### Getting more recommendations from AlbumOfTheYear.org
+
+Soltify Radar also uses AlbumOfTheYear.org to get a list of the top rated albums in the year(s) you are searching. If
+an album meets the following criteria, it is added to your list, regardless of taste points:
+
+* At least 5 critic reviews
+* Average score of 82 (`--critic-thresh`) out of 100
+* From one of the genres listed in `--critic-genres`:
+    * Default: Art Pop, Contemporary Folk, Country, Folk, Indie Pop, Indie Rock, Pop, Psychedelic, Rock, Singer-Songwriter
+    * For all options, see the GENRE dropdown at: https://www.albumoftheyear.org/ratings/6-highest-rated/2023/1
+
+### Sorting the list
+
+Once all of the releases are gathered, the critic score and taste score are normalized, then combined to get an overall
+score as follows:
+  * Overall Score = Critic Score * 0.25 [`--weight-critic`] + Taste Score * 0.75 [`--weight-taste`]
+
+The songs are sorted from highest to lowest.
+
+### Maintaining the list
+
+The output of Soltify Radar goes into two places:
+
+* Spotify Playlists: "Soltify Radar: Albums" and "Soltify Radar: Singles"
+* Local files: soltify_radar_albums.csv and soltify_radar_singles.csv
+
+The intended use is that the playlists act as your music queues. After you listen to something or decide
+you don't want it, you can delete it from the playlists and Soltify Radar won't add it back.
+
+The .csv files should be treated as Read-Only and never deleted. These save your history and are also
+available to let you see more info (each albums' critic rating, similarity score, etc)
+
+Each time you run Soltify, it will do a few maintainence steps:
+* Lookup latest critic scores for each album on the list
+* If an album is released featuring songs from your single list, they are removed from the single list
+* If you've liked new songs, taste scores are updated and we scan any new artists
+
+### Examples
+
+* Example 1: Run with default parameters (standard usage)
+
+`python soltify_radar.py`
+
+* Example 2: Get fewer suggestions from Spotify (songs have to be more similar to your tastes)
+
+`python soltify_radar.py --taste-thresh=50`
+
+* Example 3: Get fewer suggestions from critics (songs have to have higher score and be specific genre)
+
+`python soltify_radar.py --critic-thresh=90 --critic-genres Rock Singer-Songwriter`
+
+* Example 4: Get all releases from the past year
+
+`python soltify_radar.py --max-days=365`
+
+* Example 5: Turn off filtering of songs
+
+`python soltify_radar.py --allow-remaster --allow-cover --allow-live --allow-acoustic --allow-remix`
+
+* Example 6: Sort playlist by critic score
+
+`python soltify_radar.py --weight-critic=1.0 --weight-taste=0.0`
+
+* For more detailed usage, run:
+
+`python soltify_radar.py -h`
 
 ## Soltify Memories (coming soon)
 
@@ -133,9 +232,9 @@ Build a cumulative history of your Spotify music listening history by combining 
     - Go to https://github.com/msol272/soltify
     - Click Code -> Download ZIP
     - Unzip the files
-3. Install the spotipy library
+3. Install the necessary libraries
     - Open Terminal (on Mac) or Command Prompt (on Windows)
-    - Type `pip install spotipy`
+    - Type `pip install spotipy requests_html`
 
 ## Running the tools
 

@@ -101,6 +101,65 @@ class Spotify:
 
         return songs, uri
 
+    def create_playlist(self, name):
+        """
+        Create a playlist with the specified name and return its uri
+        """
+        uri = ""
+        print("TODO: create_playlist()")
+        return uri
+
+    def load_library(self, show_progress):
+        """
+        Load a list of this user's saved songs
+        """
+
+        songs = []
+        results = self.sp.current_user_saved_tracks()
+        while results:
+            for i, item in enumerate(results["items"]):
+                track = item['track']
+
+                name = track["name"]
+                artist = track["artists"][0]["name"]
+                album = track["album"]["name"]
+                uri = track["uri"]
+                release_date = track["album"]["release_date"]
+                added_at = item['added_at']
+                popularity = track["popularity"]
+                duration = track["duration_ms"]
+                explicit = track["explicit"]
+
+                song = {
+                    "name": name,
+                    "artist": artist,
+                    "album": album,
+                    "uri": uri,
+                    "release_date": release_date,
+                    "added_at": added_at,
+                    "popularity": popularity,
+                    "duration": duration,
+                    "explicit": explicit
+                }
+                songs.append(song)
+            if results["next"]:
+                results = self.sp.next(results)
+                if show_progress:
+                    print(".", end="", flush=True)
+            else:
+                results = None
+        if show_progress:
+            print("")
+        return songs
+
+    def load_artist_tree(self, songs):
+        """
+        From a list of liked songs, generate data on the number of liked songs
+        by artists, related artists, and related artists of related artists
+        """
+        artists = []
+        return artists
+
     def write_playlist(self, uri, songs, overwrite=True):
         """
         Add the specified songs to the playlist with the specified URI. If overwrite

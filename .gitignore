@@ -1,5 +1,6 @@
 # Cache directory
 soltify_cache
+soltify_output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
