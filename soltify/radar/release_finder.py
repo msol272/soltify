@@ -34,7 +34,7 @@ def build_list_from_playlist(playlist):
     print("TODO: build_list_from_playlist()")
     return []
 
-def find_releases(sp, taste, min_time, album_releases, single_releases, allow_flags, force_filter):
+def find_releases_t1(album_releases, single_releases, taste, min_time, allow_flags, force_filter, sp):
     """
     Search for new releases by artists in taste profile that came out between now
     and min_time. Certain types of releases (e.g. live, cover, remix) are filtered
