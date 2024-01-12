@@ -42,15 +42,15 @@ For more details, read on...
 
 ### Getting recommendations from Spotify
 
-Soltify Radar maintains a list of all artists you've liked songs from, as well as their related artists (1st order)
-and related artists of their related artist (2nd order). It assigns taste points to each artist as follows:
+Soltify Radar maintains a list of all artists you've liked songs from, as well as their related artists.
+It assigns taste points to each artist as follows:
 
-* Each song you've liked by the artist: +10 points (`--taste-pts0`)
-* Each song you've liked by a 1st order relative: +5 points (`taste-pts1`)
-* Each song you've liked by a 2nd order relative: +2 points (`--taste-pts2`)
+* Each song you've liked by the artist: +1.0 points (`--taste-pts0`)
+* Each song you've liked by a relatived artist: +0.2 points (`taste-pts1`)
 
-For all artists with a taste score of 10 (`--taste-thresh`) or higher, Spotify is scanned for any releases since
-last time Soltify Radar was run, or up to 60 (`--max-days`) back.
+For all artists with a taste score of 2.0 (`--taste-thresh`) or higher, Spotify is scanned for any releases since
+last time Soltify Radar was run, or up to 60 (`--max-days`) back. Liked songs that are more than 15 (`taste-years`) years
+old are ignored.
 
 ### Getting critic scores
 

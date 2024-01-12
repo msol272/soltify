@@ -3,6 +3,7 @@ Soltify/Common/File Manager
 
 Helper functions related to reading and writing spotify data to and from files
 """
+import csv
 import os
 import pickle
 import re
@@ -11,25 +12,7 @@ import re
 LIBRARY_FILENAME = "library.pkl"
 RELEASE_ALBUMS_FILENAME = "soltify_radar_albums.csv"
 RELEASE_SINGLES_FILENAME = "soltify_radar_singles.csv"
-
-def _playlist_name_to_filename(playlist_name):
-    """
-    Convert a playlist name to a filename used for saving/loading it
-    """
-
-    # Replace invalid characters with underscores
-    filename = re.sub(r'[\/:*?"<>|\s]', '_', playlist_name)
-
-    # Remove leading and trailing whitespaces
-    filename = filename.strip()
-
-    # Remove consecutive underscores
-    filename = re.sub('_+', '_', filename)
-
-    # Add extension
-    filename += ".pkl"
-
-    return filename
+TASTE_PROFILE_FILENAME = "soltify_taste_profile.csv"
 
 def library_cache_exists(directory):
     """
@@ -38,7 +21,7 @@ def library_cache_exists(directory):
     path = os.path.join(directory, LIBRARY_FILENAME)
     return os.path.exists(path)
 
-def save_library(directory, songs, artists, run_time):
+def save_library(directory, songs, taste, run_time):
     """
     Save a user's library to a file that can be loaded later
     """
@@ -51,7 +34,7 @@ def save_library(directory, songs, artists, run_time):
     path = os.path.join(directory, LIBRARY_FILENAME)
 
     # Write the file
-    data = {"songs":songs, "artists":artists, "run_time":run_time}
+    data = {"songs":songs, "taste":taste, "run_time":run_time}
     file = open(path, "wb")
     pickle.dump(data, file)
 
@@ -68,7 +51,7 @@ def load_library(directory):
 
     file = open(path, 'rb')
     data = pickle.load(file)
-    return data["songs"], data["artists"], data["run_time"]
+    return data["songs"], data["taste"], data["run_time"]
 
 def save_playlist(directory, playlist_name, songs, playlist_uri):
     """
@@ -132,3 +115,41 @@ def load_release_lists(directory):
     print("TODO: load_release_lists()")
     return album_releases, single_releases
 
+def save_taste_profile(directory, taste):
+    """
+    Save taste profile to .csv file for viewing
+    """
+    path = os.path.join(directory, TASTE_PROFILE_FILENAME)
+    with open(path, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Artist", "Score", "Liked Songs", "Liked Related"])
+        for artist_id, entry in taste.items():
+            row = [
+                entry["artist_name"], 
+                "{:.3f}".format(entry["score"]), 
+                entry["liked_songs"], 
+                entry ["liked_related"]
+            ]
+            writer.writerow(row)
+
+################################################################################
+# Private functions
+################################################################################
+def _playlist_name_to_filename(playlist_name):
+    """
+    Convert a playlist name to a filename used for saving/loading it
+    """
+
+    # Replace invalid characters with underscores
+    filename = re.sub(r'[\/:*?"<>|\s]', '_', playlist_name)
+
+    # Remove leading and trailing whitespaces
+    filename = filename.strip()
+
+    # Remove consecutive underscores
+    filename = re.sub('_+', '_', filename)
+
+    # Add extension
+    filename += ".pkl"
+
+    return filename
