@@ -21,7 +21,7 @@ def library_cache_exists(directory):
     path = os.path.join(directory, LIBRARY_FILENAME)
     return os.path.exists(path)
 
-def save_library(directory, songs, taste, run_time):
+def save_library(directory, songs, artist_tree, run_time):
     """
     Save a user's library to a file that can be loaded later
     """
@@ -34,7 +34,7 @@ def save_library(directory, songs, taste, run_time):
     path = os.path.join(directory, LIBRARY_FILENAME)
 
     # Write the file
-    data = {"songs":songs, "taste":taste, "run_time":run_time}
+    data = {"songs":songs, "artist_tree":artist_tree, "run_time":run_time}
     file = open(path, "wb")
     pickle.dump(data, file)
 
@@ -51,7 +51,7 @@ def load_library(directory):
 
     file = open(path, 'rb')
     data = pickle.load(file)
-    return data["songs"], data["taste"], data["run_time"]
+    return data["songs"], data["artist_tree"], data["run_time"]
 
 def save_playlist(directory, playlist_name, songs, playlist_uri):
     """

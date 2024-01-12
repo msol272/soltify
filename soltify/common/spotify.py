@@ -11,7 +11,16 @@ from datetime import datetime
 from . import log
 from . import taste_profile
 
+# Scope to use when connecting to spotify API
 SPOTIFY_SCOPE = "user-library-read playlist-read-private playlist-modify-private"
+
+# When loading library or playlist, show a progress bar if we are loading this
+# many songs or more
+LOAD_PROGRESS_THRESHOLD = 50
+
+# When loading library or playlist, show a list of added songs if we are loading
+# this many songs or less
+LOAD_SONGLIST_THRESHOLD = 50
 
 class Spotify:
     """
@@ -57,7 +66,9 @@ class Spotify:
                 "No playlist with name {} found in user library".format(playlist_name))
 
         # Load all songs from the playlist
-        songs = self._load_playlist(uri)
+        songs = []
+        results = self.sp.playlist_items(uri)
+        self._load_song_list(results, songs)
 
         return songs, uri
 
@@ -77,78 +88,16 @@ class Spotify:
             self.sp.playlist_add_items(uri, song_uris[start_idx:end_idx])
             start_idx = end_idx
 
-    def load_library(self, songs, show_progress):
+    def load_library(self, songs, artist_tree):
         """
-        Given a list of songs that have already been loaded, read this user's
-        saved song list and return a list of any new songs that aren't already
-        in that list. If show_progress=True, it will print dots to the console to
-        show that it is running (useful for long runs)
+        Read this user's saved tracks and add information about any missing songs
+        to the provided song list and artist_tree.
+
+        We assume that songs are sorted by most recently added, so we stop when
+        we encounter the first song that's already in the list.
         """
-        new_songs = []
         results = self.sp.current_user_saved_tracks()
-        total = results["total"]
-        progress = 0
-        done = False
-        if show_progress:
-            log.show_progress(0, total)
-
-        while results:
-            for i, item in enumerate(results["items"]):
-                track = item['track']
-
-                name = track["name"]
-                artist = track["artists"][0]["name"]
-                artist_id = track["artists"][0]["id"]
-                album = track["album"]["name"]
-                uri = track["uri"]
-                release_date = self._get_release_date(track["album"])
-                added_at = item['added_at']
-                popularity = track["popularity"]
-                duration = track["duration_ms"]
-                explicit = track["explicit"]
-
-                song = {
-                    "name": name,
-                    "artist": artist,
-                    "artist_id": artist_id,
-                    "album": album,
-                    "uri": uri,
-                    "release_date": release_date,
-                    "added_at": added_at,
-                    "popularity": popularity,
-                    "duration": duration,
-                    "explicit": explicit
-                }
-                if self._uri_in_song_list(songs, uri):
-                    # Assumption: Songs are always in order by date added.
-                    # If we get to one that's already in the song list, all of the
-                    # rest of the list will also be in the songlist
-                    done = True
-                    break
-                else:
-                    # If this song is not in the list, add it now
-                    new_songs.append(song)
-            progress += len(results["items"])
-            if results["next"] and not done:
-                results = self.sp.next(results)
-            else:
-                results = None
-            if show_progress:
-                log.show_progress(progress, total)
-
-        return new_songs
-
-    def get_related_artists(self, artist_id):
-        """
-        Get a list of related artists for an artist based on its ID
-        """
-        result = self.sp.artist_related_artists(artist_id)
-        artist_ids = []
-        artist_names = []
-        for artist in result["artists"]:
-            artist_ids.append(artist["id"])
-            artist_names.append(artist["name"])
-        return artist_ids, artist_names
+        self._load_song_list(results, songs, artist_tree)
 
     def get_new_albums(self, artist_id, min_time, singles):
         """
@@ -225,44 +174,70 @@ class Spotify:
 
         return uri
 
-    def _load_playlist(self, uri):
+    def _load_song_list(self, results, songs, artist_tree = None):
         """
         Load all songs from a playlist to a list of dictionaries
         """
-        songs = []
-        results = self.sp.playlist_items(uri)
+        done = False
+        total = results["total"] - len(songs)
+        new_songs = []
+
+        if total >= LOAD_PROGRESS_THRESHOLD:
+            show_progress = True
+            log.show_progress(0, total)
+        else:
+            show_progress = False
         while results:
             for i, item in enumerate(results["items"]):
                 track = item['track']
 
-                name = track["name"]
-                artist = track["artists"][0]["name"]
-                artist_id = track["artists"][0]["id"]
-                album = track["album"]["name"]
+                artist_name = track["artists"][0]["name"]
+                artist_id =  track["artists"][0]["id"]
                 uri = track["uri"]
-                release_date = self._get_release_date(track["album"])
-                added_at = item['added_at']
-                popularity = track["popularity"]
-                duration = track["duration_ms"]
-                explicit = track["explicit"]
-
                 song = {
-                    "name": name,
-                    "artist": artist,
+                    "name": track["name"],
+                    "artist": artist_name,
                     "artist_id": artist_id,
-                    "album": album,
+                    "album": track["album"]["name"],
                     "uri": uri,
-                    "release_date": release_date,
-                    "added_at": added_at,
-                    "popularity": popularity,
-                    "duration": duration,
-                    "explicit": explicit
+                    "release_date": self._get_release_date(track["album"]),
+                    "added_at": item['added_at'],
+                    "popularity": track["popularity"],
+                    "duration": track["duration_ms"],
+                    "explicit": track["explicit"]
                 }
-                songs.append(song)
-            if results["next"]:
+                if self._uri_in_song_list(songs, uri):
+                    done = True
+                    break
+                else:
+                    new_songs.append(song)
+                    if artist_tree != None and not artist_id in artist_tree:
+                        self._add_to_artist_tree(artist_id, artist_name, artist_tree)
+            if not done and results["next"]:
+                if show_progress:
+                    log.show_progress(len(new_songs), total)
                 results = self.sp.next(results)
             else:
                 results = None
+
+        # Ensure that the progress bar ends at 100%
+        if show_progress:
+            log.show_progress(total, total)
+
+        # Print summary of songs that were added
+        added = len(new_songs)
+        if added == 0:
+            print("  No new tracks found")
+        elif added <= LOAD_SONGLIST_THRESHOLD:
+            print(f"  {added} new tracks added:")
+            for song in new_songs:
+                artist = song["artist"]
+                name = song["name"]
+                print(f"    {artist} - {name}")
+        else:
+            print(f"  {added} new tracks added.")
+
+        songs.extend(new_songs)
         return songs
 
     def _uri_in_song_list(self, songs, uri):
@@ -291,3 +266,19 @@ class Spotify:
             day = 31
             release_date = datetime(year, month, day)
         return release_date
+
+    def _add_to_artist_tree(self, artist_id, artist_name, artist_tree):
+        """
+        Get a list of related artists for an artist based on its ID
+        """
+        entry = dict()
+        entry["name"] = artist_name
+        entry["related_ids"] = []
+        entry["related_names"] = []
+
+        result = self.sp.artist_related_artists(artist_id)
+        for artist in result["artists"]:
+            entry["related_ids"].append(artist["id"])
+            entry["related_names"].append(artist["name"])
+
+        artist_tree[artist_id] = entry
