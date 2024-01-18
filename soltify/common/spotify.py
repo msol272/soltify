@@ -99,7 +99,7 @@ class Spotify:
         results = self.sp.current_user_saved_tracks()
         self._load_song_list(results, songs, artist_tree)
 
-    def get_new_albums(self, artist_id, min_time, singles):
+    def get_new_albums(self, artist_id, min_date, singles):
         """
         Get a list of all albums that an artist has released since a specific date.
 
@@ -118,9 +118,10 @@ class Spotify:
                     "name": item["name"],
                     "artist": item["artists"][0]["name"],
                     "id": item["id"],
-                    "release_date": self._get_release_date(item)
+                    "release_date": self._get_release_date(item),
+                    "critic_rating": 0.0,
                 }
-                if album["release_date"] < min_time:
+                if album["release_date"] < min_date:
                     done = True
                     break 
                 else:
@@ -253,18 +254,18 @@ class Spotify:
         precision = item["release_date_precision"]
         release_string = item["release_date"]
         if precision == "day":
-            release_date = datetime.strptime(release_string, "%Y-%m-%d")
+            release_date = datetime.strptime(release_string, "%Y-%m-%d").date()
         elif precision == "month":
             tokens = release_string.split("-")
             year = int(tokens[0])
             month = int(tokens[1])
             day = 28
-            release_date = datetime(year, month, day)
+            release_date = datetime(year, month, day).date()
         else:
             year = int(release_string)
             month = 12
             day = 31
-            release_date = datetime(year, month, day)
+            release_date = datetime(year, month, day).date()
         return release_date
 
     def _add_to_artist_tree(self, artist_id, artist_name, artist_tree):

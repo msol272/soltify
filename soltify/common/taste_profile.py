@@ -15,8 +15,8 @@ def build_taste_profile(songs, artist_tree, pts_like, pts_related, decay_age, ma
     artists in the past <max_age> years.
     """
     taste = dict()
-    min_release_date = datetime.now() - timedelta(days=365.25*max_age)
-    decay_release_date = datetime.now() - timedelta(days=365.25*decay_age)
+    min_release_date = (datetime.now() - timedelta(days=365.25*max_age)).date()
+    decay_release_date = (datetime.now() - timedelta(days=365.25*decay_age)).date()
     for song in songs:
         release_date = song["release_date"]
         if release_date >= decay_release_date:
@@ -45,28 +45,28 @@ def _add_to_taste_profile(taste, song, artist_tree, pts_like, pts_related):
     # for them
     artist_id = song["artist_id"]
     artist_name = song["artist"]
-    if not artist_id in taste:
+    if not artist_name in taste:
         _create_taste_profile_entry(taste, artist_name, artist_id)
 
-    taste[artist_id]["score"] += pts_like
-    taste[artist_id]["liked_songs"] += 1
+    taste[artist_name]["score"] += pts_like
+    taste[artist_name]["liked_songs"] += 1
 
     # Give all related songs points
     for i, related_id in enumerate(artist_tree[artist_id]["related_ids"]):
         related_name = artist_tree[artist_id]["related_names"][i]
-        if not related_id in taste:
+        if not related_name in taste:
             _create_taste_profile_entry(taste, related_name, related_id)
-        taste[related_id]["score"] += pts_related
-        taste[related_id]["liked_related"] += 1
+        taste[related_name]["score"] += pts_related
+        taste[related_name]["liked_related"] += 1
 
 def _create_taste_profile_entry(taste, artist_name, artist_id):
         entry = dict()
 
-        entry["artist_name"] = artist_name
+        entry["artist_id"] = artist_id
         entry["score"] = 0.0
         entry["liked_songs"] = 0
         entry["liked_related"] = 0
-        taste[artist_id] = entry
+        taste[artist_name] = entry
 
 def _get_decay_factor(release_date, max_release_date, min_release_date):
     """

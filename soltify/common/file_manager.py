@@ -123,9 +123,9 @@ def save_taste_profile(directory, taste):
     with open(path, "w", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["Artist", "Score", "Liked Songs", "Liked Related"])
-        for artist_id, entry in taste.items():
+        for artist_name, entry in taste.items():
             row = [
-                entry["artist_name"], 
+                artist_name, 
                 "{:.3f}".format(entry["score"]), 
                 entry["liked_songs"], 
                 entry ["liked_related"]

@@ -80,6 +80,8 @@ def main():
         help="Any release from a Tier 4 artist and a critic score of this or higher is included [default:82]")
     release_group.add_argument("--critic-genres", nargs='+', default=DEFAULT_GENRES,
         help="Only add a release from AlbumOfTheYear if its one of these genres [default:{}]".format(" ".join(["\"{}\"".format(g) for g in DEFAULT_GENRES])))
+    release_group.add_argument("--min-critics", type=int, default=5,
+        help="Only consider a critic rating valid if at least this many critics have reviewed the album [default:5]")
     release_group.add_argument("--max-days", type=int, default=60,
         help="Only add releases that are up to this many days old [default:60]")
 
@@ -116,16 +118,22 @@ def main():
     taste = taste_profile.build_taste_profile(songs, artist_tree, args.taste_pts_like, 
         args.taste_pts_related, args.taste_decay_age, args.taste_max_age)
 
-    print("Checking Spotify for new releases from your favorite artists...")
-    allow_flags = [args.allow_remaster, args.allow_live, args.allow_acoustic, args.allow_remix, args.allow_cover]
-    min_time = current_time - timedelta(days=args.max_days)
     album_releases = []
     single_releases = []
-    print("TODO: this override is for debug")
-    taste_t1 = {artist_id:entry for artist_id, entry in taste.items() if entry["score"] > args.cutoff_t1}
-    release_finder.find_releases_t1(album_releases, single_releases, taste_t1, 
-        min_time, allow_flags, args.force_filter, sp)
+    min_date = (current_time - timedelta(days=args.max_days)).date()
+    allow_flags = [args.allow_remaster, args.allow_live, args.allow_acoustic, args.allow_remix, args.allow_cover]
 
+    print("Checking Spotify for new releases from your favorite artists...")
+    taste_t1 = {artist_name:entry for artist_name, entry in taste.items() if entry["score"] >= args.cutoff_t1}
+    release_finder.find_releases_spotify(album_releases, single_releases, taste_t1, 
+        min_date, allow_flags, args.force_filter, sp)
+
+    print("Checking AlbumOfTheYear for more releases...")
+    release_finder.find_releases_aoty(
+        album_releases, taste, min_date,
+        args.cutoff_t2, args.cutoff_t3, args.critic_t3, args.critic_t4,
+        args.critic_genres, args.min_critics,
+        allow_flags, args.force_filter)
 
 
     # Write all output
