@@ -4,7 +4,7 @@ Soltify/Radar/AOTYReader
 Helper class that handle reading data from albumoftheyear.org
 """
 import requests_html
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 
 class AOTYReader:
     def __init__(self):
@@ -48,7 +48,7 @@ class AOTYReader:
 ################################################################################    
     def _get_release_date(self, date_element):
         """
-        From a date element, create a datetime object representing the most 
+        From a date element, create a date object representing the most 
         recent occurence of that date. There are 3 possibilities:
 
         1. date_element has text in the format "Jan 6", assume its the most recent year
@@ -57,7 +57,7 @@ class AOTYReader:
         """
         
         # Add a year to the date (note: for now we assume it's this year, not last year)
-        current_year = datetime.now().year
+        current_year = date.today().year
         
         if not date_element:
             full_date_str = f"Jan 1 {current_year}"
@@ -66,14 +66,14 @@ class AOTYReader:
         else:
             full_date_str = f"{date_element.text} {current_year}"
 
-        # Convert to a datetime object
-        date = datetime.strptime(full_date_str, "%b %d %Y").date()
+        # Convert to a date object
+        release_date = datetime.strptime(full_date_str, "%b %d %Y").date()
 
         # Check if it is in the future. If it is, set it to last year
-        if date > datetime.now().date():
-            date = date.replace(year=current_year-1)
+        if release_date > date.today():
+            release_date = release_date.replace(year=current_year-1)
 
-        return date
+        return release_date
 
     def _get_critic_rating(self, element):
         """

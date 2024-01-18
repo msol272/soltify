@@ -4,7 +4,7 @@ Soltify/Radar/ReleaseFinder
 Helper functions that handle finding new releases from a list of artists via
 Spotify
 """
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 from ..common import log
 from .aoty_reader import AOTYReader
@@ -78,12 +78,12 @@ def find_releases_aoty(album_releases, taste, min_date,
 
     # First, just gather a list of releases
     aoty_reader = AOTYReader()
-    num_days = (datetime.now().date() - min_date).days
+    num_days = (date.today() - min_date).days
     total_days = num_days
     page = 1
     done = False
 
-    next_date =  datetime.now().date() - timedelta(days=1)
+    next_date =  date.today() - timedelta(days=1)
     last_date = min_date
     progress = 0
 
@@ -98,12 +98,12 @@ def find_releases_aoty(album_releases, taste, min_date,
                 if entry["num_critics"] >= min_critics and entry["critic_rating"] >= critic_t4:
                     genres = aoty_reader.get_genres(entry["release_link"])
                     if _check_genre(genres, critic_genres):
-                        new_albums.append(entry)
+                        _add_aoty_album(album_releases, new_albums, entry)
             elif taste[artist]["score"] < cutoff_t2:
                 if entry["num_critics"] >= min_critics and entry["critic_rating"] >= critic_t3:
-                    new_albums.append(entry)
+                    _add_aoty_album(album_releases, new_albums, entry)
             else:
-                new_albums.append(entry)
+                _add_aoty_album(album_releases, new_albums, entry)
             if entry["release_date"] <= last_date:
                 log.show_progress(total_days, total_days)
                 done = True
@@ -121,12 +121,23 @@ def find_releases_aoty(album_releases, taste, min_date,
 ################################################################################
 # Private Functions
 ################################################################################
+def _add_aoty_album(all_albums, new_albums, aoty_data):
+    """
+    Add an album from AOTY to the album release list. If we already know about
+    this release, add its critic score to the existing list. If we don't,
+    add it to the new album list
+    """
+    idx = _find_release(aoty_data, all_albums)
+    if idx >= 0:
+        all_albums[idx]["critic_rating"] = aoty_data["critic_rating"]
+    else:
+        new_albums.append(aoty_data)
+
+
 def _filter_and_add(release_type, all_releases, new_releases, allow_flags, force_filter):
     """
     Add any new releases to the full release list if they pass filter conditions
     """
-    new_releases = [r for r in new_releases if not _release_in_list(r, all_releases)]
-
     if new_releases:
         print(f"  {release_type}:")
         print("  -----------------")
@@ -135,16 +146,15 @@ def _filter_and_add(release_type, all_releases, new_releases, allow_flags, force
                 all_releases.append(r)
         print("")
 
-def _release_in_list(release, list):
+def _find_release(release, list):
     """
-    Check if a release is already in a list of releases
+    Find a release in an existing release list. If its found, the index is returned.
+    Otherwise, -1 is returned.
     """
-    found = False
-    for r in list:
+    for idx, r in enumerate(list):
         if r["artist"] == release["artist"] and r["name"] == release["name"]:
-            found = True
-            break
-    return found
+            return idx
+    return -1
 
 def _check_filters(release, allow_flags, force_filter):
     """

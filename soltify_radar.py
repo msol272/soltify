@@ -68,8 +68,8 @@ def main():
         help="If a liked song is this many years old, it is excluded from the taste profile [default:15.0]")
 
     release_group = parser.add_argument_group("advanced release finder parameters")
-    release_group.add_argument("--cutoff-t1", type=float, default=100,
-        help="Any artist with a taste score above this number is considered Tier 1 and we will scan Spotify for new music for them every time [default:100]")
+    release_group.add_argument("--cutoff-t1", type=float, default=75,
+        help="Any artist with a taste score above this number is considered Tier 1 and we will scan Spotify for new music for them every time [default:75]")
     release_group.add_argument("--cutoff-t2", type=float, default=30,
         help="Any artist with a taste score above this number is considered Tier 2 and we will always include new releases found on AlbumOfTheYear for them [default:30]")
     release_group.add_argument("--cutoff-t3", type=float, default=10,
@@ -120,7 +120,7 @@ def main():
 
     album_releases = []
     single_releases = []
-    min_date = (current_time - timedelta(days=args.max_days)).date()
+    min_date = current_time.date() - timedelta(days=args.max_days)
     allow_flags = [args.allow_remaster, args.allow_live, args.allow_acoustic, args.allow_remix, args.allow_cover]
 
     print("Checking Spotify for new releases from your favorite artists...")

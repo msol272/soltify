@@ -6,7 +6,7 @@ Helper class, Spotify, that handles communication with a Spotify account
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-from datetime import datetime
+from datetime import datetime, date
 
 from . import log
 from . import taste_profile
@@ -260,12 +260,12 @@ class Spotify:
             year = int(tokens[0])
             month = int(tokens[1])
             day = 28
-            release_date = datetime(year, month, day).date()
+            release_date = date(year, month, day)
         else:
             year = int(release_string)
             month = 12
             day = 31
-            release_date = datetime(year, month, day).date()
+            release_date = date(year, month, day)
         return release_date
 
     def _add_to_artist_tree(self, artist_id, artist_name, artist_tree):
