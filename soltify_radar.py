@@ -14,6 +14,7 @@ from soltify.common import spotify
 from soltify.common import taste_profile
 
 from soltify.radar import release_finder
+from soltify.radar import release_manager
 
 # By default, we will only pull in highly rated albums from these Genres.
 # This can be overriden with the --critic-genres flag
@@ -86,6 +87,12 @@ def main():
         help="Only add releases that are up to this many days old [default:60]")
 
 
+    sort_group = parser.add_argument_group("advanced release sorting parameters")
+    sort_group.add_argument("--weight-taste", type=float, default=75,
+        help="Weight to give to this release's taste score when sorting [default:75]")
+    sort_group.add_argument("--weight-critic", type=float, default=25,
+        help="Weight to give to this release's critic score when sorting [default:25]")
+
     args = parser.parse_args()
 
     if args.max_days > MAX_HISTORY_DAYS:
@@ -135,11 +142,14 @@ def main():
         args.critic_genres, args.min_critics,
         allow_flags, args.force_filter)
 
+    print("Finalizing lists and writing output...")
+    album_releases = release_manager.sort(album_releases, args.weight_taste, args.weight_critic)
+    single_releases = release_manager.sort(single_releases, args.weight_taste, args.weight_critic)
 
     # Write all output
-    print("Finalizing lists and writing output...")
     file_manager.save_library(args.cache_dir, songs, artist_tree, current_time)
     file_manager.save_taste_profile(args.out_dir, taste)
+    file_manager.save_release_lists(args.out_dir, album_releases, single_releases)
     print("Done!")
 
 

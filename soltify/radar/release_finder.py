@@ -52,8 +52,19 @@ def find_releases_spotify(album_releases, single_releases, taste, min_date, allo
     log.show_progress(0, total)
     for i, artist_name in enumerate(taste):
         artist_id = taste[artist_name]["artist_id"]
-        new_albums.extend(sp.get_new_albums(artist_id, min_date, False))
-        new_singles.extend(sp.get_new_albums(artist_id, min_date, True))
+        
+        # Albums
+        entries = sp.get_new_albums(artist_id, min_date, False)
+        for e in entries:
+            e["taste_score"] = taste[artist_name]["score"]
+        new_albums.extend(entries)
+
+        # Singles
+        entries = sp.get_new_albums(artist_id, min_date, True)
+        for e in entries:
+            e["taste_score"] = taste[artist_name]["score"]
+        new_singles.extend(entries)
+
         log.show_progress(i+1, total)
 
     _filter_and_add("NEW ALBUMS", album_releases, new_albums, allow_flags, force_filter)
@@ -98,12 +109,12 @@ def find_releases_aoty(album_releases, taste, min_date,
                 if entry["num_critics"] >= min_critics and entry["critic_rating"] >= critic_t4:
                     genres = aoty_reader.get_genres(entry["release_link"])
                     if _check_genre(genres, critic_genres):
-                        _add_aoty_album(album_releases, new_albums, entry)
+                        _add_aoty_album(album_releases, new_albums, entry, taste)
             elif taste[artist]["score"] < cutoff_t2:
                 if entry["num_critics"] >= min_critics and entry["critic_rating"] >= critic_t3:
-                    _add_aoty_album(album_releases, new_albums, entry)
+                    _add_aoty_album(album_releases, new_albums, entry, taste)
             else:
-                _add_aoty_album(album_releases, new_albums, entry)
+                _add_aoty_album(album_releases, new_albums, entry, taste)
             if entry["release_date"] <= last_date:
                 log.show_progress(total_days, total_days)
                 done = True
@@ -121,7 +132,7 @@ def find_releases_aoty(album_releases, taste, min_date,
 ################################################################################
 # Private Functions
 ################################################################################
-def _add_aoty_album(all_albums, new_albums, aoty_data):
+def _add_aoty_album(all_albums, new_albums, aoty_data, taste):
     """
     Add an album from AOTY to the album release list. If we already know about
     this release, add its critic score to the existing list. If we don't,
@@ -131,6 +142,11 @@ def _add_aoty_album(all_albums, new_albums, aoty_data):
     if idx >= 0:
         all_albums[idx]["critic_rating"] = aoty_data["critic_rating"]
     else:
+        artist = aoty_data["artist"]
+        if artist in taste:
+            aoty_data["taste_score"] = taste[artist]["score"]
+        else:
+            aoty_data["taste_score"] = 0            
         new_albums.append(aoty_data)
 
 

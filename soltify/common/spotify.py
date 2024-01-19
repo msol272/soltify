@@ -120,6 +120,7 @@ class Spotify:
                     "id": item["id"],
                     "release_date": self._get_release_date(item),
                     "critic_rating": 0.0,
+                    "removed": False
                 }
                 if album["release_date"] < min_date:
                     done = True
@@ -131,26 +132,6 @@ class Spotify:
             else:
                 results = None
         return albums
-
-    def get_artists_singles(self, artist_id):
-        """
-        Get a list of all singles (or eps) that an artist released
-        """
-        singles = []
-        results = self.sp.artist_albums(artist_id, album_type="single", limit=50)
-        while results:
-            for i, item in enumerate(results["items"]):
-                single = {
-                    "name": item["name"],
-                    "id": item["id"],
-                    "release_date": self._get_release_date(item)
-                }
-                singles.append(single)
-            if results["next"]:
-                results = self.sp.next(results)
-            else:
-                results = None
-        return singles
 
     ############################################################################
     # Private Functions

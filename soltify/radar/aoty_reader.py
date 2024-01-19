@@ -30,6 +30,7 @@ class AOTYReader:
             entry["name"] = album
             entry["critic_rating"], entry["num_critics"] = self._get_critic_rating(e)
             entry["release_link"] = self._get_album_link(e)
+            entry["removed"] = False
             entries.append(entry)
         return entries
 

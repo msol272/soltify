@@ -104,7 +104,8 @@ def save_release_lists(directory, album_releases, single_releases):
     """
     Save album and single release lists to .csv files
     """
-    print("TODO: save_release_lists()")
+    _save_release_list(directory, RELEASE_ALBUMS_FILENAME, album_releases)
+    _save_release_list(directory, RELEASE_SINGLES_FILENAME, single_releases)
 
 def load_release_lists(directory):
     """
@@ -153,3 +154,29 @@ def _playlist_name_to_filename(playlist_name):
     filename += ".pkl"
 
     return filename
+
+
+def _save_release_list(directory, filename, releases):
+    path = os.path.join(directory, filename)
+    with open(path, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "X", 
+            "Title", 
+            "Artist", 
+            "Release Date", 
+            "Sort Score", 
+            "Taste Score", 
+            "Critic Score",
+        ])
+        for r in releases:
+            row = [
+                "X" if r["removed"] else "",
+                r["name"],
+                r["artist"],
+                r["release_date"],
+                "{:.2f}".format(r["sort_score"]),
+                "{:.2f}".format(r["taste_score"]),
+                "{:.2f}".format(r["critic_rating"]),
+            ]
+            writer.writerow(row)
